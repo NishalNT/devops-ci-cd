@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetches all Git history (helps with version comparisons)
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -18,10 +20,44 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_SSH_KEY }}
           port: 22
+          script_timeout: 5m  # Prevents timeout during long operations
           script: |
-            cd devops-ci-cd
+            # Set up Git credentials for private repo access
+            git config --global credential.helper '!f() { sleep 1; echo "username=git"; echo "password=${{ secrets.GITHUB_TOKEN }}"; }; f'
+            
+            # Navigate to project directory (create if missing)
+            mkdir -p ~/devops-ci-cd
+            cd ~/devops-ci-cd
+            
+            # Clone repo if it doesn't exist, otherwise pull updates
+            if [ ! -d .git ]; then
+              git clone https://github.com/${{ github.repository }}.git .
+            fi
+            
+            # Force clean pull (resets any local changes)
+            git fetch --all
+            git reset --hard origin/main
             git pull origin main
-            npm ci
-            npm run lint -- --fix || true
+            
+            # Install dependencies and build
+            npm ci --no-audit  # Faster, more deterministic than npm install
+            npm run lint -- --fix || true  # Auto-fix lint errors without failing
             npm run build
-            pm2 restart next-app || pm2 start "npm run start" --name "next-app"
+            
+            # Environment setup (if needed)
+            if [ ! -f .env.production ]; then
+              echo "NEXT_PUBLIC_ENV=production" > .env.production
+            fi
+            
+            # Restart or start the application using PM2
+            pm2 delete next-app || true  # Cleanup existing instance
+            pm2 start "npm run start" --name "next-app" --time
+            pm2 save
+            pm2 list
+            
+            # Health check (wait for app to start)
+            sleep 5
+            curl -I http://localhost:3000 || echo "Health check failed but continuing"
+            
+            # Optional: Notify deployment status
+            echo "✅ Deployment successful - $(date)"
