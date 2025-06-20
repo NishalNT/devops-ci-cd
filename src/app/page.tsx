@@ -29,7 +29,7 @@ export default function Home() {
       />
       <div className="bg-white/90 rounded-3xl shadow-2xl p-8 sm:p-12 flex flex-col items-center max-w-lg w-full border-4 border-pink-200 relative">
         <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-5xl animate-bounce">🎉</span>
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-pink-500 mb-2 text-center drop-shadow-lg">Happy Birthday!</h1>
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-pink-500 mb-2 text-center drop-shadow-lg">Happy Birthday Friend!</h1>
         <h2 className="text-2xl sm:text-3xl font-semibold text-purple-600 mb-4 text-center">Wishing you a day full of joy and surprises!</h2>
         <p className="text-lg sm:text-xl text-gray-700 text-center mb-6">
           May your year ahead sparkle with happiness, laughter, and all your favorite things. You deserve the best today and always!
