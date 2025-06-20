@@ -21,7 +21,6 @@ jobs:
           script: |
             cd devops-ci-cd
             git pull origin main
-            npm ci
-            npm run lint -- --fix || true
+            npm install
             npm run build
-            pm2 restart next-app || pm2 start "npm run start" --name "next-app"
+            npm run start
