@@ -2,28 +2,26 @@ name: Deploy to EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   deploy:
-    name: Push to EC2
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
-      - name: Execute remote SSH commands using password
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
-          host: 13.201.23.4
+          host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.PRIVATE_SSH_KEY }}
           port: 22
           script: |
             cd devops-ci-cd
-            ls
             git pull origin main
-            npm install
+            npm ci
+            npm run lint -- --fix || true
             npm run build
-            npm run start
+            pm2 restart next-app || pm2 start "npm run start" --name "next-app"
